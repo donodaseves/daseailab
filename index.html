@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Donodaseves AI Hub</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
 <style>
   :root {
     --mono: ui-monospace, "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, monospace;
@@ -128,19 +129,6 @@
     gap: 4px;
     transition: transform var(--dur) ease, box-shadow var(--dur) ease, border-color var(--dur) ease;
   }
-  .ai-card.gradient-accent {
-    border-left: 4px solid transparent;
-    overflow: hidden;
-  }
-  .ai-card.gradient-accent::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: var(--accent-gradient);
-  }
   .ai-card:hover, .ai-card:focus-visible {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px -6px var(--accent, var(--focus));
@@ -228,6 +216,27 @@
     transition: border-color var(--dur), color var(--dur);
   }
   .chip:hover { border-color: var(--focus); color: var(--text); }
+
+  .prompt-divider {
+    flex-basis: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .prompt-divider::before,
+  .prompt-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .prompt-divider.divider-end { margin: 4px 0 18px; }
+  .prompt-divider.divider-start { margin: 0 0 4px; }
 
   .btn {
     background: var(--surface-alt);
@@ -337,7 +346,7 @@
   var AIS = [
     { name: "ChatGPT",    desc: "OpenAI",     url: "https://chat.openai.com/",      accent: "#10A37F" },
     { name: "Claude",     desc: "Anthropic",  url: "https://claude.ai/new",         accent: "#D97757" },
-    { name: "Gemini",     desc: "Google",     url: "https://gemini.google.com/app", gradient: "linear-gradient(135deg,#4E8CFF,#B06AF6)" },
+    { name: "Gemini",     desc: "Google",     url: "https://gemini.google.com/app", accent: "#4E8CFF" },
     { name: "Mistral",    desc: "Mistral AI", url: "https://chat.mistral.ai/chat",  accent: "#FF7000" },
     { name: "Perplexity", desc: "Perplexity", url: "https://www.perplexity.ai/",    accent: "#20B8CD" },
     { name: "Grok",       desc: "xAI",        url: "https://grok.com/",             accent: "#9AA0A6" },
@@ -345,13 +354,22 @@
     { name: "DuckDuckGo", desc: "DuckDuckGo AI Chat", url: "https://duckduckgo.com/aichat", accent: "#DE5833" }
   ];
 
-  var PROMPTS = [
-    { label: "[Code]",      text: "Write clean, well-commented code for: " },
-    { label: "[Sum]",       text: "Summarize the following text concisely:\n\n" },
-    { label: "[Explain]",   text: "Explain this in simple terms:\n\n" },
-    { label: "[Fix]",       text: "Find and fix the bug in this code:\n\n" },
-    { label: "[Translate]", text: "Translate the following to English:\n\n" },
-    { label: "[Email]",     text: "Write a short, direct professional email about: " }
+  var PROMPTS_CONTENT = [
+    { label: "[Sum]",       text: "Summarize the following text concisely, focusing on the main points:\n\n" },
+    { label: "[Explain]",   text: "Explain the following concept in simple terms, as if I were a beginner:\n\n" },
+    { label: "[Fix]",       text: "Please correct the grammar, flow, and clarity of the following text while keeping the original meaning intact:\n\n" },
+    { label: "[Translate]", text: "Translate the following text into natural sounding \"Language\":\n\n" },
+    { label: "[List]",      text: "Organize the following information into a clear bullet-point list with a brief introduction and conclusion:\n\n" },
+    { label: "[Ideas]",     text: "Give me 5 creative ideas or perspectives regarding the following topic:\n\n" },
+    { label: "[Review]",    text: "Review the following text and point out any logical fallacies or missing information:\n\n" }
+  ];
+
+  var PROMPTS_STYLE = [
+    { label: "[Lang]",      text: "From now on, please respond to all my messages exclusively in [language]." },
+    { label: "[Assume]",    text: "Mention any assumptions you are making in your answer." },
+    { label: "[Brief]",     text: "Keep your answer brief and avoid unnecessary filler words." },
+    { label: "[Table]",     text: "Present the pros and cons in a table format." },
+    { label: "[Steps]",     text: "Break this down into a step-by-step guide." }
   ];
 
   /* ============ THEME ============ */
@@ -387,16 +405,11 @@
   var grid = document.getElementById("ai-grid");
   AIS.forEach(function (ai, i) {
     var card = document.createElement("div");
-    card.className = "ai-card" + (ai.gradient ? " gradient-accent" : "");
+    card.className = "ai-card";
     card.tabIndex = 0;
     card.setAttribute("role", "button");
     card.setAttribute("aria-label", "Open " + ai.name + " (Alt+" + (i + 1) + ")");
-    if (ai.gradient) {
-      card.style.setProperty("--accent-gradient", ai.gradient);
-      card.style.setProperty("--accent", ai.accent || "#8888ff");
-    } else {
-      card.style.setProperty("--accent", ai.accent);
-    }
+    card.style.setProperty("--accent", ai.accent);
     card.innerHTML =
       '<span class="keycap">Alt+' + (i + 1) + '</span>' +
       '<span class="name">' + ai.name + '</span>' +
@@ -426,7 +439,7 @@
   });
 
   var lib = document.getElementById("prompt-lib");
-  PROMPTS.forEach(function (p) {
+  function addChip(p) {
     var chip = document.createElement("button");
     chip.className = "chip";
     chip.type = "button";
@@ -437,7 +450,17 @@
       draft.focus();
     });
     lib.appendChild(chip);
-  });
+  }
+  PROMPTS_CONTENT.forEach(addChip);
+  function addDivider(text, extraClass) {
+    var divider = document.createElement("span");
+    divider.className = "prompt-divider" + (extraClass ? " " + extraClass : "");
+    divider.textContent = text;
+    lib.appendChild(divider);
+  }
+  addDivider("end of prompt", "divider-end");
+  addDivider("start of prompt", "divider-start");
+  PROMPTS_STYLE.forEach(addChip);
 
   document.getElementById("copy-draft").addEventListener("click", function () {
     var btn = this;
