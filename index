@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Hub</title>
+    <style>
+        :root { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --accent: #4a90e2; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        .container { width: 100%; max-width: 800px; }
+        textarea { width: 100%; height: 120px; background: var(--card); color: var(--text); border: 1px solid #333; padding: 15px; border-radius: 8px; box-sizing: border-box; resize: vertical; margin-bottom: 10px; }
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; }
+        button { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; background: #333; color: white; }
+        button:hover { background: #444; }
+        .ai-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
+        .ai-btn { padding: 20px; text-align: center; text-decoration: none; color: white; border-radius: 8px; font-weight: bold; display: block; }
+        /* Brand Colors */
+        .chatgpt { background: #10a37f; } .claude { background: #d97757; }
+        .gemini { background: #4285f4; } .mistral { background: #f7a300; }
+        .perplexity { background: #1a1a1a; border: 1px solid #444; } .grok { background: #000; border: 1px solid #444; }
+        .deepseek { background: #4d61ff; }
+        .search-box { margin: 20px 0; width: 100%; }
+        input { width: 100%; padding: 10px; background: var(--card); border: 1px solid #333; border-radius: 6px; color: white; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>AI Hub</h2>
+    <textarea id="promptArea" placeholder="Draft your prompt here..."></textarea>
+    <div class="controls">
+        <button onclick="copyPrompt()">Copy to Clipboard</button>
+        <button onclick="clearPrompt()">Clear</button>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Quick Search (Google)..." onkeydown="if(event.key==='Enter') search()">
+    </div>
+
+    <div class="ai-grid">
+        <a href="https://chatgpt.com" target="_blank" class="ai-btn chatgpt">ChatGPT</a>
+        <a href="https://claude.ai" target="_blank" class="ai-btn claude">Claude</a>
+        <a href="https://gemini.google.com" target="_blank" class="ai-btn gemini">Gemini</a>
+        <a href="https://chat.mistral.ai" target="_blank" class="ai-btn mistral">Mistral</a>
+        <a href="https://www.perplexity.ai" target="_blank" class="ai-btn perplexity">Perplexity</a>
+        <a href="https://x.ai" target="_blank" class="ai-btn grok">Grok</a>
+        <a href="https://chat.deepseek.com" target="_blank" class="ai-btn deepseek">DeepSeek</a>
+    </div>
+</div>
+
+<script>
+    function copyPrompt() {
+        const text = document.getElementById("promptArea");
+        text.select();
+        document.execCommand("copy");
+        alert("Copied to clipboard!");
+    }
+    function clearPrompt() { document.getElementById("promptArea").value = ""; }
+    function search() {
+        const query = document.getElementById("searchInput").value;
+        if(query) window.open("https://www.google.com/search?q=" + encodeURIComponent(query), "_blank");
+    }
+</script>
+
+</body>
+</html>
