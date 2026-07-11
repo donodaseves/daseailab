@@ -5,62 +5,146 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Hub</title>
     <style>
-        :root { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --accent: #4a90e2; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
-        .container { width: 100%; max-width: 800px; }
-        textarea { width: 100%; height: 120px; background: var(--card); color: var(--text); border: 1px solid #333; padding: 15px; border-radius: 8px; box-sizing: border-box; resize: vertical; margin-bottom: 10px; }
-        .controls { display: flex; gap: 10px; margin-bottom: 20px; }
-        button { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; background: #333; color: white; }
-        button:hover { background: #444; }
-        .ai-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
-        .ai-btn { padding: 20px; text-align: center; text-decoration: none; color: white; border-radius: 8px; font-weight: bold; display: block; }
-        /* Brand Colors */
-        .chatgpt { background: #10a37f; } .claude { background: #d97757; }
-        .gemini { background: #4285f4; } .mistral { background: #f7a300; }
-        .perplexity { background: #1a1a1a; border: 1px solid #444; } .grok { background: #000; border: 1px solid #444; }
-        .deepseek { background: #4d61ff; }
-        .search-box { margin: 20px 0; width: 100%; }
-        input { width: 100%; padding: 10px; background: var(--card); border: 1px solid #333; border-radius: 6px; color: white; box-sizing: border-box; }
+        :root {
+            --bg-dark: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 { margin-top: 0; font-size: 1.8rem; letter-spacing: -0.025em; text-align: center; }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: white;
+            padding: 16px;
+            box-sizing: border-box;
+            font-size: 14px;
+            resize: none;
+            margin-bottom: 16px;
+        }
+
+        .actions { display: flex; gap: 10px; margin-bottom: 24px; }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        button:hover { transform: scale(1.02); }
+
+        .btn-copy { background: #3b82f6; color: white; }
+        .btn-clear { background: #475569; color: white; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: white;
+            box-sizing: border-box;
+            margin-bottom: 24px;
+        }
+
+        .ai-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .ai-btn {
+            padding: 12px;
+            text-align: center;
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: filter 0.2s;
+        }
+
+        .ai-btn:hover { filter: brightness(1.2); }
+
+        /* Button Colors */
+        .c-chatgpt { background: #10a37f; }
+        .c-claude { background: #d97706; }
+        .c-gemini { background: #3b82f6; }
+        .c-mistral { background: #f59e0b; }
+        .c-perplexity { background: #64748b; }
+        .c-grok { background: #000000; border: 1px solid #333; }
+        .c-deepseek { background: #4f46e5; }
+
+        .disclaimer {
+            margin-top: 30px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-align: center;
+            border-top: 1px solid var(--glass-border);
+            padding-top: 15px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>AI Hub</h2>
-    <textarea id="promptArea" placeholder="Draft your prompt here..."></textarea>
-    <div class="controls">
-        <button onclick="copyPrompt()">Copy to Clipboard</button>
-        <button onclick="clearPrompt()">Clear</button>
+    <h1>AI Hub</h1>
+    
+    <textarea placeholder="Draft your prompt here..."></textarea>
+    
+    <div class="actions">
+        <button class="btn-copy">Copy to Clipboard</button>
+        <button class="btn-clear">Clear</button>
     </div>
 
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Quick Search (Google)..." onkeydown="if(event.key==='Enter') search()">
-    </div>
+    <input type="text" placeholder="Quick Search (Google)...">
 
     <div class="ai-grid">
-        <a href="https://chatgpt.com" target="_blank" class="ai-btn chatgpt">ChatGPT</a>
-        <a href="https://claude.ai" target="_blank" class="ai-btn claude">Claude</a>
-        <a href="https://gemini.google.com" target="_blank" class="ai-btn gemini">Gemini</a>
-        <a href="https://chat.mistral.ai" target="_blank" class="ai-btn mistral">Mistral</a>
-        <a href="https://www.perplexity.ai" target="_blank" class="ai-btn perplexity">Perplexity</a>
-        <a href="https://x.ai" target="_blank" class="ai-btn grok">Grok</a>
-        <a href="https://chat.deepseek.com" target="_blank" class="ai-btn deepseek">DeepSeek</a>
+        <a href="#" class="ai-btn c-chatgpt">ChatGPT</a>
+        <a href="#" class="ai-btn c-claude">Claude</a>
+        <a href="#" class="ai-btn c-gemini">Gemini</a>
+        <a href="#" class="ai-btn c-mistral">Mistral</a>
+        <a href="#" class="ai-btn c-perplexity">Perplexity</a>
+        <a href="#" class="ai-btn c-grok">Grok</a>
+        <a href="#" class="ai-btn c-deepseek">DeepSeek</a>
+    </div>
+
+    <div class="disclaimer">
+        ⚠️ This is a personal project. Use as-is; no bug fixes or support provided.
     </div>
 </div>
-
-<script>
-    function copyPrompt() {
-        const text = document.getElementById("promptArea");
-        text.select();
-        document.execCommand("copy");
-        alert("Copied to clipboard!");
-    }
-    function clearPrompt() { document.getElementById("promptArea").value = ""; }
-    function search() {
-        const query = document.getElementById("searchInput").value;
-        if(query) window.open("https://www.google.com/search?q=" + encodeURIComponent(query), "_blank");
-    }
-</script>
 
 </body>
 </html>
