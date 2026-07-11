@@ -4,98 +4,73 @@
     <meta charset="UTF-8">
     <title>🤖 AI Hub</title>
     <style>
-        body {
-            background-color: #000000;
-            color: #ffffff;
-            font-family: 'Segoe UI', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
+        :root { --bg: #000; --card: #111; --text: #eee; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .main-card { background: var(--card); padding: 2rem; width: 100%; max-width: 500px; border-radius: 20px; border: 1px solid #222; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; }
+        h2 { font-weight: 300; color: #888; }
 
-        .main-card {
-            background: #111111;
-            border: 1px solid #222;
-            padding: 2rem;
-            width: 100%;
-            max-width: 500px;
-            border-radius: 20px;
-        }
+        .hidden { display: none; }
+        textarea, input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; margin-bottom: 10px; }
+        
+        .btn-group { display: flex; gap: 5px; margin-bottom: 15px; }
+        button { flex: 1; padding: 8px; cursor: pointer; background: #222; border: none; color: #ccc; border-radius: 5px; font-size: 0.75rem; }
+        button:hover { background: #333; }
 
-        h2 { text-align: center; font-weight: 300; margin-bottom: 2rem; color: #888; }
-
-        textarea {
-            width: 100%;
-            background: #000;
-            border: 1px solid #333;
-            color: #fff;
-            padding: 15px;
-            border-radius: 10px;
-            height: 100px;
-            margin-bottom: 10px;
-            box-sizing: border-box;
-        }
-
-        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        .btn-group button { 
-            flex: 1; padding: 10px; cursor: pointer; background: #222; border: none; 
-            color: #ccc; border-radius: 6px; font-size: 0.8rem; 
-        }
-        .btn-group button:hover { background: #333; }
-
-        .ai-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .ai-link {
-            display: flex; align-items: center; gap: 10px;
-            background: #1a1a1a; padding: 12px; border-radius: 8px;
-            text-decoration: none; color: white; font-weight: 500;
-            border: 1px solid #222;
-        }
-        .ai-link:hover { border-color: #555; background: #222; }
-
-        .icon { width: 20px; height: 20px; background: #444; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
-
-        .disclaimer {
-            margin-top: 30px; font-size: 0.7rem; color: #444; text-align: center;
-        }
+        .ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .ai-link { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 8px; text-decoration: none; color: white; border: 1px solid #222; transition: 0.2s; }
+        .ai-link:hover { border-color: #555; }
+        .icon { width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; }
+        
+        .shortcuts { margin-top: 20px; font-size: 0.7rem; color: #444; text-align: center; border-top: 1px solid #222; pt: 10px; }
     </style>
 </head>
 <body>
 
 <div class="main-card">
-    <h2>AI Hub</h2>
-    <textarea id="prompt" placeholder="Type prompt here..."></textarea>
-    <div class="btn-group">
-        <button onclick="copy()">Copy</button>
-        <button onclick="document.getElementById('prompt').value=''">Clear</button>
+    <div class="header">
+        <h2>AI Hub</h2>
+        <button onclick="document.getElementById('extra').classList.toggle('hidden')">Focus Toggle</button>
+    </div>
+
+    <div id="extra">
+        <textarea id="prompt" placeholder="Draft prompt..."></textarea>
+        <div class="btn-group">
+            <button onclick="copy()">Copy</button>
+            <button onclick="clearT()">Clear</button>
+            <button onclick="add('Analyze this code:')">[Code]</button>
+            <button onclick="add('Summarize this:')">[Sum]</button>
+        </div>
+        <input type="text" id="wiki" placeholder="Wikipedia Search..." onkeydown="if(event.key==='Enter') window.open('https://en.wikipedia.org/wiki/'+this.value)">
     </div>
 
     <div class="ai-grid">
-        <a href="https://chatgpt.com" class="ai-link"><div class="icon">C</div> ChatGPT</a>
-        <a href="https://claude.ai" class="ai-link"><div class="icon">C</div> Claude</a>
-        <a href="https://gemini.google.com" class="ai-link"><div class="icon">G</div> Gemini</a>
-        <a href="https://chat.mistral.ai" class="ai-link"><div class="icon">M</div> Mistral</a>
-        <a href="https://www.perplexity.ai" class="ai-link"><div class="icon">P</div> Perplexity</a>
-        <a href="https://x.ai" class="ai-link"><div class="icon">G</div> Grok</a>
-        <a href="https://chat.deepseek.com" class="ai-link"><div class="icon">D</div> DeepSeek</a>
+        <a href="https://chatgpt.com" class="ai-link" style="border-left: 4px solid #10a37f"><div class="icon" style="background:#10a37f">1</div> ChatGPT</a>
+        <a href="https://claude.ai" class="ai-link" style="border-left: 4px solid #d97706"><div class="icon" style="background:#d97706">2</div> Claude</a>
+        <a href="https://gemini.google.com" class="ai-link" style="border-left: 4px solid #3b82f6"><div class="icon" style="background:#3b82f6">3</div> Gemini</a>
+        <a href="https://chat.mistral.ai" class="ai-link" style="border-left: 4px solid #f59e0b"><div class="icon" style="background:#f59e0b">4</div> Mistral</a>
+        <a href="https://www.perplexity.ai" class="ai-link" style="border-left: 4px solid #64748b"><div class="icon" style="background:#64748b">5</div> Perplexity</a>
+        <a href="https://x.ai" class="ai-link" style="border-left: 4px solid #333"><div class="icon" style="background:#333">6</div> Grok</a>
+        <a href="https://chat.deepseek.com" class="ai-link" style="border-left: 4px solid #4f46e5"><div class="icon" style="background:#4f46e5">7</div> DeepSeek</a>
     </div>
 
-    <div class="disclaimer">
-        Personal project. No support or bug fixes provided.
+    <div class="shortcuts">
+        Shortcuts: Alt + 1-7 for AI | Focus to hide UI | Personal project: No support.
     </div>
 </div>
 
 <script>
-    function copy() {
-        const t = document.getElementById("prompt");
-        t.select(); document.execCommand("copy");
-    }
+    function copy() { const t = document.getElementById("prompt"); t.select(); document.execCommand("copy"); }
+    function clearT() { document.getElementById("prompt").value = ""; }
+    function add(text) { document.getElementById("prompt").value += text + " "; }
+    // Shortcut logic
+    window.addEventListener("keydown", e => {
+        if(e.altKey && e.key >= '1' && e.key <= '7') {
+            const urls = ["https://chatgpt.com", "https://claude.ai", "https://gemini.google.com", "https://chat.mistral.ai", "https://www.perplexity.ai", "https://x.ai", "https://chat.deepseek.com"];
+            window.open(urls[e.key - 1], "_blank");
+        }
+    });
 </script>
 
 </body>
