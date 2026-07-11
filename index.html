@@ -5,25 +5,25 @@
     <title>🤖 AI Hub</title>
     <style>
         :root { --bg: #000; --card: #111; --text: #eee; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; display: flex; justify-content: center; padding: 20px; margin: 0; }
-        .main-card { background: var(--card); padding: 2rem; width: 100%; max-width: 500px; border-radius: 20px; border: 1px solid #222; }
+        @media (prefers-color-scheme: light) { :root { --bg: #f4f4f4; --card: #fff; --text: #333; } }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; display: flex; justify-content: center; padding: 20px; margin: 0; transition: 0.3s; }
+        .main-card { background: var(--card); padding: 2rem; width: 100%; max-width: 500px; border-radius: 20px; border: 1px solid #333; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; }
-        h2 { font-weight: 300; color: #888; }
-
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        h2 { font-weight: 300; color: #888; margin: 0; }
+        
+        #news-ticker { font-size: 0.75rem; color: #0a84ff; margin-bottom: 15px; font-style: italic; }
         .hidden { display: none; }
-        textarea, input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; margin-bottom: 10px; }
+        textarea, input { width: 100%; background: #222; border: 1px solid #444; color: var(--text); padding: 12px; border-radius: 8px; box-sizing: border-box; margin-bottom: 10px; }
         
         .btn-group { display: flex; gap: 5px; margin-bottom: 15px; }
-        button { flex: 1; padding: 8px; cursor: pointer; background: #222; border: none; color: #ccc; border-radius: 5px; font-size: 0.75rem; }
-        button:hover { background: #333; }
-
-        .ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .ai-link { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 8px; text-decoration: none; color: white; border: 1px solid #222; transition: 0.2s; }
-        .ai-link:hover { border-color: #555; }
-        .icon { width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; }
+        button { flex: 1; padding: 8px; cursor: pointer; background: #333; border: none; color: #ccc; border-radius: 5px; font-size: 0.75rem; }
         
-        .shortcuts { margin-top: 20px; font-size: 0.7rem; color: #444; text-align: center; border-top: 1px solid #222; pt: 10px; }
+        .ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .ai-link { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 8px; text-decoration: none; color: var(--text); border: 1px solid #333; }
+        .icon { width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: white; }
+        
+        .meta { margin-top: 20px; font-size: 0.7rem; color: #666; text-align: center; }
     </style>
 </head>
 <body>
@@ -31,18 +31,19 @@
 <div class="main-card">
     <div class="header">
         <h2>AI Hub</h2>
-        <button onclick="document.getElementById('extra').classList.toggle('hidden')">Focus Toggle</button>
+        <button onclick="document.getElementById('extra').classList.toggle('hidden')">Menu</button>
     </div>
+    <div id="news-ticker">Loading today's AI pulse...</div>
 
     <div id="extra">
+        <textarea id="goal" placeholder="Today's Goal..." oninput="localStorage.setItem('goal', this.value)"></textarea>
         <textarea id="prompt" placeholder="Draft prompt..."></textarea>
         <div class="btn-group">
-            <button onclick="copy()">Copy</button>
-            <button onclick="clearT()">Clear</button>
+            <button onclick="copy()">Copy Draft</button>
             <button onclick="add('Analyze this code:')">[Code]</button>
             <button onclick="add('Summarize this:')">[Sum]</button>
         </div>
-        <input type="text" id="wiki" placeholder="Wikipedia Search..." onkeydown="if(event.key==='Enter') window.open('https://en.wikipedia.org/wiki/'+this.value)">
+        <input type="text" placeholder="Wikipedia Search..." onkeydown="if(event.key==='Enter') window.open('https://en.wikipedia.org/wiki/'+this.value)">
     </div>
 
     <div class="ai-grid">
@@ -55,16 +56,23 @@
         <a href="https://chat.deepseek.com" class="ai-link" style="border-left: 4px solid #4f46e5"><div class="icon" style="background:#4f46e5">7</div> DeepSeek</a>
     </div>
 
-    <div class="shortcuts">
-        Shortcuts: Alt + 1-7 for AI | Focus to hide UI | Personal project: No support.
+    <div class="meta">
+        <p id="clock"></p>
+        Shortcuts: Alt + 1-7 | No support provided.
     </div>
 </div>
 
 <script>
+    document.getElementById('goal').value = localStorage.getItem('goal') || "";
+    document.getElementById('clock').innerText = new Date().toLocaleDateString();
+    
+    // News Fetch
+    fetch('https://api.rss2json.com/v1/api.json?rss_url=https://news.ycombinator.com/rss')
+    .then(res => res.json())
+    .then(data => document.getElementById('news-ticker').innerText = "AI Pulse: " + data.items[0].title);
+
     function copy() { const t = document.getElementById("prompt"); t.select(); document.execCommand("copy"); }
-    function clearT() { document.getElementById("prompt").value = ""; }
     function add(text) { document.getElementById("prompt").value += text + " "; }
-    // Shortcut logic
     window.addEventListener("keydown", e => {
         if(e.altKey && e.key >= '1' && e.key <= '7') {
             const urls = ["https://chatgpt.com", "https://claude.ai", "https://gemini.google.com", "https://chat.mistral.ai", "https://www.perplexity.ai", "https://x.ai", "https://chat.deepseek.com"];
