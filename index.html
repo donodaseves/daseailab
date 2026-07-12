@@ -188,6 +188,13 @@
     justify-content: space-between;
   }
 
+  .draft-hint {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    color: var(--text-faint);
+  }
+
   .draft-meta {
     font-family: var(--mono);
     font-size: 11px;
@@ -195,7 +202,7 @@
     margin-top: 6px;
   }
 
-  textarea#draft {
+  textarea#draft, textarea#notes, textarea#cleaner {
     width: 100%;
     min-height: 140px;
     resize: vertical;
@@ -208,6 +215,9 @@
     padding: 10px 12px;
     line-height: 1.5;
   }
+
+  textarea#notes { min-height: 90px; }
+  textarea#cleaner { min-height: 110px; }
 
   .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 
@@ -245,6 +255,7 @@
   }
   .prompt-divider.divider-start { margin: 0 0 6px; }
   .prompt-divider.divider-end { margin: 16px 0 6px; }
+  .prompt-divider.divider-mood { margin: 16px 0 6px; }
 
   .btn {
     background: var(--surface-alt);
@@ -303,14 +314,14 @@
   }
 
   /* ---------- Focus mode ---------- */
-  body.focus-mode .utility-panel {
+  body.focus-mode .utility-panel,
+  body.focus-mode .timer-row {
     display: none;
   }
-  .focus-only { display: none; }
-  body.focus-mode .focus-only { display: flex; }
 
   /* ---------- Timer / Stopwatch ---------- */
   .timer-row {
+    display: flex;
     gap: 16px;
     flex-wrap: wrap;
     justify-content: center;
@@ -457,7 +468,7 @@
     <div class="ai-grid" id="ai-grid"></div>
   </section>
 
-  <div class="timer-row focus-only" id="timer-row">
+  <div class="timer-row" id="timer-row">
     <div class="timer-card">
       <div class="timer-label">Timer</div>
       <div class="pomodoro-time" id="pomo-time">25:00</div>
@@ -483,7 +494,7 @@
   <section class="utility-panel">
     <div class="panel-col">
       <div class="card">
-        <h2>Draft</h2>
+        <h2>Draft <span class="draft-hint">press / to jump here</span></h2>
         <textarea id="draft" placeholder="Write or paste a prompt here..."></textarea>
         <div class="draft-meta" id="draft-meta">0 words · 0 characters</div>
         <div class="row" id="prompt-lib"></div>
@@ -503,6 +514,21 @@
           <button class="btn primary" id="wiki-btn">Search</button>
         </div>
         <div class="wiki-status" id="wiki-status"></div>
+      </div>
+
+      <div class="card">
+        <h2>Notes <button class="chip" id="notes-clear" style="font-size:10px;padding:3px 8px;">clear</button></h2>
+        <textarea id="notes" placeholder="Quick notes..."></textarea>
+      </div>
+
+      <div class="card">
+        <h2>Clean Text</h2>
+        <textarea id="cleaner" placeholder="Paste text to strip extra spaces, blank lines and duplicate words..."></textarea>
+        <div class="row">
+          <button class="btn primary" id="cleaner-clean">Clean</button>
+          <button class="btn" id="cleaner-copy">Copy</button>
+          <button class="btn danger-outline" id="cleaner-clear">Clear</button>
+        </div>
       </div>
 
       <div class="card">
@@ -559,7 +585,16 @@
     { label: "[Assume]",    text: "Mention any assumptions you are making in your answer." },
     { label: "[Brief]",     text: "Keep your answer brief and avoid unnecessary filler words." },
     { label: "[Table]",     text: "Present the pros and cons in a table format." },
-    { label: "[Steps]",     text: "Break this down into a step-by-step guide." }
+    { label: "[Steps]",     text: "Break this down into a step-by-step guide." },
+    { label: "[Ask]",       text: "Before answering, ask me any questions you need to clarify my request." }
+  ];
+
+  var PROMPTS_MOOD = [
+    { label: "[Formal]",   text: "Respond in a formal, professional tone." },
+    { label: "[Casual]",   text: "Respond in a casual, relaxed tone." },
+    { label: "[Sincere]",  text: "Respond in a sincere, honest, and direct tone." },
+    { label: "[Friendly]", text: "Respond in a warm, friendly tone." },
+    { label: "[Playful]",  text: "Respond in a playful, lighthearted tone." }
   ];
 
   /* ============ TIMER / STOPWATCH ============ */
@@ -739,6 +774,15 @@
     }
   });
 
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "/") return;
+    var active = document.activeElement;
+    var typing = active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA");
+    if (typing) return;
+    e.preventDefault();
+    document.getElementById("draft").focus();
+  });
+
   /* ============ DRAFT / PROMPT LIBRARY ============ */
   var draft = document.getElementById("draft");
   var draftMeta = document.getElementById("draft-meta");
@@ -754,6 +798,51 @@
   draft.addEventListener("input", function () {
     localStorage.setItem("acd-draft", draft.value);
     updateMeta();
+  });
+
+  /* ============ NOTES ============ */
+  var notes = document.getElementById("notes");
+  notes.value = localStorage.getItem("acd-notes") || "";
+  notes.addEventListener("input", function () {
+    localStorage.setItem("acd-notes", notes.value);
+  });
+  document.getElementById("notes-clear").addEventListener("click", function () {
+    notes.value = "";
+    localStorage.removeItem("acd-notes");
+    notes.focus();
+  });
+
+  /* ============ CLEAN TEXT ============ */
+  function cleanText(text) {
+    // collapse repeated spaces/tabs
+    text = text.replace(/[ \t]+/g, " ");
+    // trim each line
+    text = text.split("\n").map(function (line) { return line.trim(); }).join("\n");
+    // collapse 3+ blank lines into a single blank line
+    text = text.replace(/\n{3,}/g, "\n\n");
+    // remove consecutive duplicate words (case-insensitive), keep first occurrence
+    text = text.replace(/\b(\w+)(\s+\1\b)+/gi, "$1");
+    return text.trim();
+  }
+
+  var cleaner = document.getElementById("cleaner");
+
+  document.getElementById("cleaner-clean").addEventListener("click", function () {
+    cleaner.value = cleanText(cleaner.value);
+  });
+
+  document.getElementById("cleaner-copy").addEventListener("click", function () {
+    var btn = this;
+    navigator.clipboard.writeText(cleaner.value).then(function () {
+      var old = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(function () { btn.textContent = old; }, 1200);
+    });
+  });
+
+  document.getElementById("cleaner-clear").addEventListener("click", function () {
+    cleaner.value = "";
+    cleaner.focus();
   });
 
   var lib = document.getElementById("prompt-lib");
@@ -780,6 +869,8 @@
   PROMPTS_CONTENT.forEach(addChip);
   addDivider("end of prompt", "divider-end");
   PROMPTS_STYLE.forEach(addChip);
+  addDivider("mood", "divider-mood");
+  PROMPTS_MOOD.forEach(addChip);
 
   document.getElementById("copy-draft").addEventListener("click", function () {
     var btn = this;
@@ -848,6 +939,7 @@
     { label: "Excalidraw", url: "https://excalidraw.com/" },
     { label: "Notion", url: "https://www.notion.so/" },
     { label: "NotebookLM", url: "https://notebooklm.google.com/" },
+    { label: "Translator", url: "https://www.deepl.com/translator" },
     { label: "Donodaseves Utilities", url: "https://donodaseves.github.io/utilities/" }
   ];
   var redirectLinks = document.getElementById("redirect-links");
@@ -947,9 +1039,11 @@
   });
 
   /* ============ SHORTCUTS ============ */
-  var SHORTCUTS = AIS.map(function (ai, i) {
-    return { key: "Alt+" + (i + 1), desc: ai.name };
-  }).concat([{ key: "Ctrl/⌘+K", desc: "Command palette" }]);
+  var SHORTCUTS = [
+    { key: "Alt+1–8", desc: "Open AI models" },
+    { key: "Ctrl/⌘+K", desc: "Command palette" },
+    { key: "/", desc: "Jump to draft" }
+  ];
 
   var shortcutsBody = document.getElementById("shortcuts-body");
   SHORTCUTS.forEach(function (s) {
