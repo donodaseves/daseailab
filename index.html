@@ -281,41 +281,147 @@
     min-height: 16px;
   }
 
-  /* ---------- Changelog ---------- */
-  .cl-entry { margin-bottom: 16px; }
-  .cl-entry:last-child { margin-bottom: 0; }
-  .cl-date {
+  /* ---------- Shortcuts ---------- */
+  .shortcut-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .shortcut-row:last-child { border-bottom: none; }
+  .shortcut-key {
     font-family: var(--mono);
     font-size: 11px;
     color: var(--text-faint);
-    margin-bottom: 6px;
-  }
-  .cl-group { margin-bottom: 6px; }
-  .cl-group:last-child { margin-bottom: 0; }
-  .cl-tag {
-    display: inline-block;
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    padding: 1px 6px;
+    border: 1px solid var(--border);
     border-radius: 4px;
-    margin-bottom: 4px;
-  }
-  .cl-tag.added   { background: rgba(46, 160, 90, 0.15);  color: #3FBE73; }
-  .cl-tag.changed { background: rgba(91, 141, 239, 0.15); color: var(--focus); }
-  .cl-tag.removed { background: rgba(229, 83, 61, 0.15);  color: var(--danger); }
-  .cl-list {
-    margin: 4px 0 0;
-    padding-left: 18px;
-    font-size: 12.5px;
-    color: var(--text-muted);
-    line-height: 1.6;
+    padding: 2px 7px;
+    background: var(--surface-alt);
   }
 
   /* ---------- Focus mode ---------- */
   body.focus-mode .utility-panel {
     display: none;
+  }
+  .focus-only { display: none; }
+  body.focus-mode .focus-only { display: flex; }
+
+  /* ---------- Timer / Stopwatch ---------- */
+  .timer-row {
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 0 auto 28px;
+  }
+  .timer-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    min-width: 190px;
+  }
+  .timer-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .pomodoro-time {
+    font-family: var(--mono);
+    font-size: 36px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .timer-set-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .timer-set-row input {
+    width: 60px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 6px 8px;
+    text-align: center;
+  }
+  .pomodoro-controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* ---------- Command palette ---------- */
+  .cmdk-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12vh;
+    z-index: 1000;
+  }
+  .cmdk-overlay.open { display: flex; }
+  .cmdk-box {
+    width: 90%;
+    max-width: 480px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .cmdk-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--surface-alt);
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-size: 15px;
+    font-family: var(--sans);
+    padding: 14px 16px;
+  }
+  .cmdk-input:focus { outline: none; }
+  .cmdk-list { max-height: 320px; overflow-y: auto; }
+  .cmdk-item {
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-size: 13.5px;
+  }
+  .cmdk-item .cmdk-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+  }
+  .cmdk-item.active, .cmdk-item:hover { background: var(--surface-alt); }
+  .cmdk-empty {
+    padding: 14px 16px;
+    font-size: 12.5px;
+    color: var(--text-faint);
+  }
+  .cmdk-hint {
+    padding: 8px 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    border-top: 1px solid var(--border-soft);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -341,6 +447,7 @@
       <h1>Donodaseves AI Hub</h1>
     </div>
     <div class="header-controls">
+      <button class="icon-btn" id="cmdk-trigger" title="Command palette (Ctrl+K)">⌘K Search</button>
       <button class="icon-btn" id="focus-toggle" aria-pressed="false" title="Toggle Focus Mode">◧ Focus</button>
       <button class="icon-btn" id="theme-toggle" title="Toggle theme">☾ Theme</button>
     </div>
@@ -349,6 +456,29 @@
   <section class="deck">
     <div class="ai-grid" id="ai-grid"></div>
   </section>
+
+  <div class="timer-row focus-only" id="timer-row">
+    <div class="timer-card">
+      <div class="timer-label">Timer</div>
+      <div class="pomodoro-time" id="pomo-time">25:00</div>
+      <div class="timer-set-row">
+        <input type="number" id="pomo-minutes" min="1" max="180" value="25">
+        <button class="btn" id="pomo-set" type="button">Set</button>
+      </div>
+      <div class="pomodoro-controls">
+        <button class="btn primary" id="pomo-start" type="button">Start</button>
+        <button class="btn danger-outline" id="pomo-reset" type="button">Reset</button>
+      </div>
+    </div>
+    <div class="timer-card">
+      <div class="timer-label">Stopwatch</div>
+      <div class="pomodoro-time" id="sw-time">00:00</div>
+      <div class="pomodoro-controls">
+        <button class="btn primary" id="sw-start" type="button">Start</button>
+        <button class="btn danger-outline" id="sw-reset" type="button">Reset</button>
+      </div>
+    </div>
+  </div>
 
   <section class="utility-panel">
     <div class="panel-col">
@@ -381,14 +511,22 @@
       </div>
 
       <div class="card">
-        <h2>Changelog</h2>
-        <div id="changelog-body"></div>
+        <h2>Shortcuts</h2>
+        <div id="shortcuts-body"></div>
       </div>
     </div>
   </section>
 </div>
 
 <footer>Personal project. No support or bug fixes provided.</footer>
+
+<div class="cmdk-overlay" id="cmdk-overlay">
+  <div class="cmdk-box">
+    <input type="text" id="cmdk-input" class="cmdk-input" placeholder="Jump to a model or link..." autocomplete="off" spellcheck="false">
+    <div class="cmdk-list" id="cmdk-list"></div>
+    <div class="cmdk-hint">↑↓ navigate · Enter open · Esc close</div>
+  </div>
+</div>
 
 <script>
 (function () {
@@ -423,6 +561,124 @@
     { label: "[Table]",     text: "Present the pros and cons in a table format." },
     { label: "[Steps]",     text: "Break this down into a step-by-step guide." }
   ];
+
+  /* ============ TIMER / STOPWATCH ============ */
+  function formatTime(s) {
+    var m = Math.floor(s / 60), sec = s % 60;
+    return (m < 10 ? "0" : "") + m + ":" + (sec < 10 ? "0" : "") + sec;
+  }
+
+  function beep() {
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      var ctx = new Ctx();
+      [0, 0.25].forEach(function (delay) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + delay + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + 0.35);
+      });
+    } catch (e) { /* audio not available, fail silently */ }
+  }
+
+  var pomoPreset = 25 * 60;
+  var pomoSeconds = pomoPreset;
+  var pomoInterval = null;
+  var pomoRunning = false;
+  var pomoTimeEl = document.getElementById("pomo-time");
+  var pomoStartBtn = document.getElementById("pomo-start");
+  var pomoMinutesInput = document.getElementById("pomo-minutes");
+
+  function renderPomo() { pomoTimeEl.textContent = formatTime(pomoSeconds); }
+  renderPomo();
+
+  function pomoTick() {
+    if (pomoSeconds <= 0) {
+      clearInterval(pomoInterval);
+      pomoInterval = null;
+      pomoRunning = false;
+      pomoStartBtn.textContent = "Start";
+      pomoTimeEl.textContent = "Done";
+      beep();
+      return;
+    }
+    pomoSeconds--;
+    renderPomo();
+  }
+
+  pomoStartBtn.addEventListener("click", function () {
+    if (pomoRunning) {
+      clearInterval(pomoInterval);
+      pomoInterval = null;
+      pomoRunning = false;
+      pomoStartBtn.textContent = "Start";
+    } else {
+      if (pomoSeconds <= 0) pomoSeconds = pomoPreset;
+      pomoRunning = true;
+      pomoStartBtn.textContent = "Pause";
+      pomoInterval = setInterval(pomoTick, 1000);
+    }
+  });
+
+  document.getElementById("pomo-reset").addEventListener("click", function () {
+    clearInterval(pomoInterval);
+    pomoInterval = null;
+    pomoRunning = false;
+    pomoStartBtn.textContent = "Start";
+    pomoSeconds = pomoPreset;
+    renderPomo();
+  });
+
+  document.getElementById("pomo-set").addEventListener("click", function () {
+    var minutes = parseInt(pomoMinutesInput.value, 10);
+    if (!minutes || minutes < 1) minutes = 1;
+    if (minutes > 180) minutes = 180;
+    pomoMinutesInput.value = minutes;
+    clearInterval(pomoInterval);
+    pomoInterval = null;
+    pomoRunning = false;
+    pomoStartBtn.textContent = "Start";
+    pomoPreset = minutes * 60;
+    pomoSeconds = pomoPreset;
+    renderPomo();
+  });
+
+  var swSeconds = 0;
+  var swInterval = null;
+  var swRunning = false;
+  var swTimeEl = document.getElementById("sw-time");
+  var swStartBtn = document.getElementById("sw-start");
+
+  function renderSw() { swTimeEl.textContent = formatTime(swSeconds); }
+
+  swStartBtn.addEventListener("click", function () {
+    if (swRunning) {
+      clearInterval(swInterval);
+      swInterval = null;
+      swRunning = false;
+      swStartBtn.textContent = "Start";
+    } else {
+      swRunning = true;
+      swStartBtn.textContent = "Pause";
+      swInterval = setInterval(function () { swSeconds++; renderSw(); }, 1000);
+    }
+  });
+
+  document.getElementById("sw-reset").addEventListener("click", function () {
+    clearInterval(swInterval);
+    swInterval = null;
+    swRunning = false;
+    swStartBtn.textContent = "Start";
+    swSeconds = 0;
+    renderSw();
+  });
 
   /* ============ THEME ============ */
   var root = document.documentElement;
@@ -605,38 +861,102 @@
     redirectLinks.appendChild(link);
   });
 
-  /* ============ CHANGELOG ============ */
-  var CHANGELOG = [
-    {
-      date: "2026-07-12",
-      added: [
-        "Redirect: NotebookLM",
-        "Changelog card"
-      ],
-      changed: [
-        "Company name on each AI card replaced with a short focus description"
-      ],
-      removed: [
-        "\"/\" shortcut to focus the draft box"
-      ]
-    }
-  ];
+  /* ============ COMMAND PALETTE ============ */
+  var CMDK_ITEMS = AIS.map(function (ai, i) {
+    return { label: ai.name, tag: "Alt+" + (i + 1), url: ai.url };
+  }).concat(REDIRECTS.map(function (r) {
+    return { label: r.label, tag: "Redirect", url: r.url };
+  }));
 
-  var clBody = document.getElementById("changelog-body");
-  function renderGroup(items, tag, label) {
-    if (!items || !items.length) return "";
-    var lis = items.map(function (i) { return "<li>" + i + "</li>"; }).join("");
-    return '<div class="cl-group"><span class="cl-tag ' + tag + '">' + label + '</span><ul class="cl-list">' + lis + '</ul></div>';
+  var cmdkOverlay = document.getElementById("cmdk-overlay");
+  var cmdkInput = document.getElementById("cmdk-input");
+  var cmdkList = document.getElementById("cmdk-list");
+  var cmdkFiltered = CMDK_ITEMS.slice();
+  var cmdkActive = 0;
+
+  function renderCmdkList() {
+    cmdkList.innerHTML = "";
+    if (!cmdkFiltered.length) {
+      cmdkList.innerHTML = '<div class="cmdk-empty">No matches</div>';
+      return;
+    }
+    cmdkFiltered.forEach(function (item, idx) {
+      var el = document.createElement("div");
+      el.className = "cmdk-item" + (idx === cmdkActive ? " active" : "");
+      el.innerHTML = "<span>" + item.label + "</span><span class=\"cmdk-tag\">" + item.tag + "</span>";
+      el.addEventListener("click", function () { openCmdkItem(item); });
+      cmdkList.appendChild(el);
+    });
   }
-  CHANGELOG.forEach(function (entry) {
-    var el = document.createElement("div");
-    el.className = "cl-entry";
-    el.innerHTML =
-      '<div class="cl-date">' + entry.date + '</div>' +
-      renderGroup(entry.added, "added", "Added") +
-      renderGroup(entry.changed, "changed", "Changed") +
-      renderGroup(entry.removed, "removed", "Removed");
-    clBody.appendChild(el);
+
+  function openCmdkItem(item) {
+    window.open(item.url, "_blank", "noopener");
+    closeCmdk();
+  }
+
+  function openCmdk() {
+    cmdkOverlay.classList.add("open");
+    cmdkInput.value = "";
+    cmdkFiltered = CMDK_ITEMS.slice();
+    cmdkActive = 0;
+    renderCmdkList();
+    setTimeout(function () { cmdkInput.focus(); }, 0);
+  }
+
+  function closeCmdk() {
+    cmdkOverlay.classList.remove("open");
+  }
+
+  cmdkInput.addEventListener("input", function () {
+    var q = cmdkInput.value.toLowerCase();
+    cmdkFiltered = CMDK_ITEMS.filter(function (i) { return i.label.toLowerCase().indexOf(q) > -1; });
+    cmdkActive = 0;
+    renderCmdkList();
+  });
+
+  cmdkInput.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (cmdkFiltered.length) cmdkActive = (cmdkActive + 1) % cmdkFiltered.length;
+      renderCmdkList();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (cmdkFiltered.length) cmdkActive = (cmdkActive - 1 + cmdkFiltered.length) % cmdkFiltered.length;
+      renderCmdkList();
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (cmdkFiltered[cmdkActive]) openCmdkItem(cmdkFiltered[cmdkActive]);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      closeCmdk();
+    }
+  });
+
+  cmdkOverlay.addEventListener("click", function (e) {
+    if (e.target === cmdkOverlay) closeCmdk();
+  });
+
+  document.getElementById("cmdk-trigger").addEventListener("click", openCmdk);
+
+  document.addEventListener("keydown", function (e) {
+    var key = e.key.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && key === "k") {
+      e.preventDefault();
+      if (cmdkOverlay.classList.contains("open")) closeCmdk(); else openCmdk();
+    }
+  });
+
+  /* ============ SHORTCUTS ============ */
+  var SHORTCUTS = AIS.map(function (ai, i) {
+    return { key: "Alt+" + (i + 1), desc: ai.name };
+  }).concat([{ key: "Ctrl/⌘+K", desc: "Command palette" }]);
+
+  var shortcutsBody = document.getElementById("shortcuts-body");
+  SHORTCUTS.forEach(function (s) {
+    var row = document.createElement("div");
+    row.className = "shortcut-row";
+    row.innerHTML = "<span>" + s.desc + "</span><span class=\"shortcut-key\">" + s.key + "</span>";
+    shortcutsBody.appendChild(row);
   });
 
 })();
