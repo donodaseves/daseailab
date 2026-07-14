@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dase AI Lab</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+<style>
+  :root {
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --radius: 5px;
+    --dur: 160ms;
+  }
+
+  html[data-theme="dark"] {
+    --bg: #1A1B1D;
+    --surface: #212226;
+    --surface-alt: #26272C;
+    --border: #34363B;
+    --border-soft: #2B2C31;
+    --text: #E8E9EB;
+    --text-muted: #9A9CA3;
+    --text-faint: #6B6D74;
+    --focus: #6C6E74;
+    --primary: #4C7EF0;
+    --danger: #C94A3B;
+    --shadow: 0 8px 24px rgba(0,0,0,0.45);
+  }
+
+  html[data-theme="light"] {
+    --bg: #F1F1F0;
+    --surface: #FFFFFF;
+    --surface-alt: #F5F5F5;
+    --border: #DDDEDF;
+    --border-soft: #E8E8E9;
+    --text: #1E1F22;
+    --text-muted: #63656B;
+    --text-faint: #94969C;
+    --focus: #57585E;
+    --primary: #3D63C9;
+    --danger: #B33A2C;
+    --shadow: 0 8px 24px rgba(20,20,20,0.08);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    transition: background var(--dur) ease, color var(--dur) ease;
+    padding-bottom: 60px;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 20px 0;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--border-soft);
+    margin-bottom: 28px;
+  }
+
+  .brand h1 {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 23px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .icon-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: border-color var(--dur), color var(--dur), background var(--dur);
+  }
+  .icon-btn:hover { border-color: var(--focus); color: var(--text); }
+  .icon-btn[aria-pressed="true"] { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  .more-menu { position: relative; }
+  .more-dropdown {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    min-width: 170px;
+    overflow: hidden;
+    z-index: 50;
+  }
+  .more-dropdown.open { display: flex; }
+  .more-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .more-item:hover { background: var(--surface-alt); color: var(--text); }
+  .more-item.danger { color: var(--danger); }
+  .more-item.danger:hover { background: var(--danger); color: #fff; }
+
+  /* ---------- AI Grid ---------- */
+  section.deck { margin-bottom: 32px; }
+
+  .ai-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .ai-card {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent, var(--focus));
+    border-radius: var(--radius);
+    padding: 16px 16px 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: transform var(--dur) ease, box-shadow var(--dur) ease, border-color var(--dur) ease;
+  }
+  .ai-card:hover, .ai-card:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px -6px var(--accent, var(--focus));
+  }
+  .ai-card:active { transform: translateY(0); }
+
+  .ai-card .name {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .ai-card .desc {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .ai-card .keycap {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 5px;
+    background: var(--surface-alt);
+  }
+
+  /* ---------- Draft (full width) ---------- */
+  .draft-card { margin-bottom: 16px; }
+
+  /* ---------- Secondary grid (Time / Scratch / Lookup) ---------- */
+  .secondary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 900px) {
+    .secondary-grid { grid-template-columns: 1fr; }
+  }
+
+  .col-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .panel-col { display: flex; flex-direction: column; gap: 16px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+
+  .card h2 {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-family: var(--mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .draft-hint {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    color: var(--text-faint);
+  }
+
+  .draft-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 6px;
+  }
+
+  textarea#draft, textarea#notes, textarea#cleaner {
+    width: 100%;
+    min-height: 140px;
+    resize: vertical;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13.5px;
+    padding: 10px 12px;
+    line-height: 1.5;
+  }
+
+  textarea#notes { min-height: 90px; }
+  textarea#cleaner { min-height: 110px; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+  .draft-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-top: 10px;
+  }
+  .draft-controls .row { margin-top: 0; }
+
+  .chip {
+    display: inline-block;
+    position: relative;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color var(--dur), color var(--dur);
+  }
+  .chip:hover { border-color: var(--focus); color: var(--text); }
+  .chip-remove {
+    margin-left: 7px;
+    color: var(--text-faint);
+    font-size: 10px;
+    cursor: pointer;
+  }
+  .chip-remove:hover { color: var(--danger); }
+
+  .mini-input, .mini-textarea {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+  .mini-textarea { min-height: 70px; resize: vertical; }
+
+  .pm-form {
+    padding: 12px 16px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pm-list {
+    padding: 4px 16px 10px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .pm-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+  .pm-item:last-child { border-bottom: none; }
+  .pm-item-remove {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-faint);
+    cursor: pointer;
+  }
+  .pm-item-remove:hover { color: var(--danger); }
+  .pm-empty {
+    padding: 10px 0;
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  .welcome-box { max-width: 460px; }
+  .welcome-body {
+    padding: 4px 16px 4px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-muted);
+  }
+  .welcome-body p { margin: 0 0 12px; }
+  .welcome-body strong { color: var(--text); }
+  .welcome-body a { color: var(--primary); text-decoration: underline; }
+  .welcome-actions { padding: 4px 16px 16px; margin-top: 0; }
+
+  .prompt-dropdown {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    max-width: 100%;
+    transition: border-color var(--dur), color var(--dur);
+  }
+  .prompt-dropdown:hover, .prompt-dropdown:focus { border-color: var(--focus); color: var(--text); }
+  .prompt-dropdown option { background: var(--surface); color: var(--text); }
+
+  .btn {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color var(--dur), background var(--dur);
+  }
+  .btn:hover { border-color: var(--focus); }
+  .btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.icon-only { padding: 7px 12px; font-size: 14px; line-height: 1; flex-shrink: 0; }
+  .btn.danger-outline { color: var(--danger); border-color: var(--danger); background: transparent; }
+  .btn.danger-outline:hover { background: var(--danger); color: #fff; }
+
+  .search-row { display: flex; gap: 8px; }
+  input[type="text"]#wiki-input {
+    flex: 1;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13.5px;
+    padding: 9px 12px;
+  }
+
+  .wiki-status {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    min-height: 16px;
+  }
+
+  /* ---------- Shortcuts ---------- */
+  .shortcut-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .shortcut-row:last-child { border-bottom: none; }
+  .shortcut-key {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 7px;
+    background: var(--surface-alt);
+  }
+
+  /* ---------- Focus mode ---------- */
+  body.focus-mode .draft-card,
+  body.focus-mode .secondary-grid {
+    display: none;
+  }
+  body.focus-mode .wrap {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  body.focus-mode .deck {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0;
+    width: 100%;
+  }
+  body.focus-mode .ai-grid {
+    width: 100%;
+    max-width: 720px;
+  }
+
+  /* ---------- Timer / Stopwatch ---------- */
+  .timer-row {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .timer-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .timer-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .pomodoro-time {
+    font-family: var(--mono);
+    font-size: 36px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .timer-set-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .timer-set-row input {
+    width: 60px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 6px 8px;
+    text-align: center;
+  }
+  .pomodoro-controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* ---------- Command palette ---------- */
+  .cmdk-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12vh;
+    z-index: 1000;
+  }
+  .cmdk-overlay.open { display: flex; }
+  .cmdk-box {
+    width: 90%;
+    max-width: 480px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .cmdk-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--surface-alt);
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-size: 15px;
+    font-family: var(--sans);
+    padding: 14px 16px;
+  }
+  .cmdk-input:focus { outline: none; }
+  .cmdk-list { max-height: 320px; overflow-y: auto; }
+  .cmdk-item {
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-size: 13.5px;
+  }
+  .cmdk-item .cmdk-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+  }
+  .cmdk-item.active, .cmdk-item:hover { background: var(--surface-alt); }
+  .cmdk-empty {
+    padding: 14px 16px;
+    font-size: 12.5px;
+    color: var(--text-faint);
+  }
+  .cmdk-hint {
+    padding: 8px 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    border-top: 1px solid var(--border-soft);
+  }
+
+  .shortcuts-modal-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 14px 16px 4px;
+  }
+  .shortcuts-modal-body { padding: 4px 16px 8px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+
+  footer {
+    max-width: 980px;
+    margin: 30px auto 0;
+    padding: 0 20px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>Dase AI Lab</h1>
+    </div>
+    <div class="header-controls">
+      <a class="icon-btn" id="donate-btn" href="PLACEHOLDER" target="_blank" rel="noopener" title="Support this project">♥ Donate</a>
+      <button class="icon-btn" id="cmdk-trigger" title="Command palette (Ctrl+K)">⌘K Search</button>
+      <div class="more-menu">
+        <button class="icon-btn" id="more-trigger" aria-haspopup="true" aria-expanded="false" title="More options">⋯ More</button>
+        <div class="more-dropdown" id="more-dropdown">
+          <button class="more-item" id="focus-toggle" aria-pressed="false" type="button">◧ Focus Mode</button>
+          <button class="more-item" id="theme-toggle" type="button">☾ Theme</button>
+          <button class="more-item" id="shortcuts-trigger" type="button">? Shortcuts</button>
+          <button class="more-item danger" id="reset-storage" type="button">⟲ Reset data</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="deck">
+    <div class="ai-grid" id="ai-grid"></div>
+  </section>
+
+  <div class="card draft-card">
+    <h2>Draft <span class="draft-hint">press / to jump here</span></h2>
+    <textarea id="draft" placeholder="Write or paste a prompt here..."></textarea>
+    <div class="draft-meta" id="draft-meta">0 words · 0 characters</div>
+    <div class="draft-controls">
+      <div class="row">
+        <button class="btn primary" id="copy-draft">Copy</button>
+        <button class="btn" id="save-draft">Save .txt</button>
+        <button class="btn danger-outline" id="clear-draft">Clear</button>
+      </div>
+      <div class="row" id="prompt-lib">
+        <select class="prompt-dropdown" id="dd-start"></select>
+        <select class="prompt-dropdown" id="dd-end"></select>
+        <select class="prompt-dropdown" id="dd-mood"></select>
+        <select class="prompt-dropdown" id="dd-custom"></select>
+        <button class="btn icon-only" id="prompt-manager-trigger" type="button" title="My Prompts" aria-label="My Prompts">+</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="secondary-grid">
+    <div class="panel-col">
+      <div class="col-label">Time</div>
+      <div class="timer-row" id="timer-row">
+        <div class="card timer-card">
+          <div class="timer-label">Timer</div>
+          <div class="pomodoro-time" id="pomo-time">25:00</div>
+          <div class="timer-set-row">
+            <input type="number" id="pomo-minutes" min="1" max="180" value="25">
+            <button class="btn" id="pomo-set" type="button">Set</button>
+          </div>
+          <div class="pomodoro-controls">
+            <button class="btn primary" id="pomo-start" type="button">Start</button>
+            <button class="btn danger-outline" id="pomo-reset" type="button">Reset</button>
+          </div>
+        </div>
+        <div class="card timer-card">
+          <div class="timer-label">Stopwatch</div>
+          <div class="pomodoro-time" id="sw-time">00:00</div>
+          <div class="pomodoro-controls">
+            <button class="btn primary" id="sw-start" type="button">Start</button>
+            <button class="btn danger-outline" id="sw-reset" type="button">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-col">
+      <div class="col-label">Scratch</div>
+      <div class="card">
+        <h2>Notes</h2>
+        <textarea id="notes" placeholder="Quick notes..."></textarea>
+        <div class="row">
+          <button class="btn primary" id="notes-copy">Copy</button>
+          <button class="btn" id="notes-save">Save .txt</button>
+          <button class="btn danger-outline" id="notes-clear">Clear</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Clean Text</h2>
+        <textarea id="cleaner" placeholder="Paste text to strip extra spaces, blank lines and duplicate words..."></textarea>
+        <div class="row">
+          <button class="btn primary" id="cleaner-copy">Copy</button>
+          <button class="btn" id="cleaner-save">Save .txt</button>
+          <button class="btn danger-outline" id="cleaner-clear">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-col">
+      <div class="col-label">Lookup</div>
+      <div class="card">
+        <h2>Wikipedia</h2>
+        <div class="search-row">
+          <input type="text" id="wiki-input" placeholder="Search Wikipedia...">
+          <button class="btn primary icon-only" id="wiki-btn" title="Search" aria-label="Search">🔍</button>
+        </div>
+        <div class="wiki-status" id="wiki-status"></div>
+      </div>
+
+      <div class="card">
+        <h2>Redirects <button class="btn icon-only" id="redirect-manager-trigger" type="button" title="Add redirect" aria-label="Add redirect">+</button></h2>
+        <div class="row" id="redirect-links"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>Personal project. No support or bug fixes provided.</footer>
+
+<div class="cmdk-overlay" id="cmdk-overlay">
+  <div class="cmdk-box">
+    <input type="text" id="cmdk-input" class="cmdk-input" placeholder="Jump to a model or link..." autocomplete="off" spellcheck="false">
+    <div class="cmdk-list" id="cmdk-list"></div>
+    <div class="cmdk-hint">↑↓ navigate · Enter open · Esc close</div>
+  </div>
+</div>
+
+<div class="cmdk-overlay" id="shortcuts-overlay">
+  <div class="cmdk-box">
+    <div class="shortcuts-modal-title">Shortcuts</div>
+    <div id="shortcuts-body" class="shortcuts-modal-body"></div>
+    <div class="cmdk-hint">Esc close</div>
+  </div>
+</div>
+
+<div class="cmdk-overlay" id="prompt-manager-overlay">
+  <div class="cmdk-box">
+    <div class="shortcuts-modal-title">My Prompts</div>
+    <div class="pm-form">
+      <input type="text" id="pm-label" class="mini-input" placeholder="Label (e.g. MyPrompt)">
+      <textarea id="pm-text" class="mini-textarea" placeholder="Prompt text..."></textarea>
+      <button class="btn primary" id="pm-add" type="button">Add prompt</button>
+    </div>
+    <div id="pm-list" class="pm-list"></div>
+    <div class="cmdk-hint">Esc close</div>
+  </div>
+</div>
+
+<div class="cmdk-overlay" id="redirect-manager-overlay">
+  <div class="cmdk-box">
+    <div class="shortcuts-modal-title">Add Redirect</div>
+    <div class="pm-form">
+      <input type="text" id="redirect-label-input" class="mini-input" placeholder="Label">
+      <input type="text" id="redirect-url-input" class="mini-input" placeholder="https://...">
+      <button class="btn primary" id="redirect-add-btn" type="button">Add redirect</button>
+    </div>
+    <div id="rm-list" class="pm-list"></div>
+    <div class="cmdk-hint">Esc close</div>
+  </div>
+</div>
+
+<div class="cmdk-overlay" id="welcome-overlay">
+  <div class="cmdk-box welcome-box">
+    <div class="shortcuts-modal-title">Welcome to Dase AI Lab</div>
+    <div class="welcome-body">
+      <p><strong>Privacy.</strong> This is a fully client-side app — everything runs in your browser. No data is ever sent to or stored on any external server; your draft, notes, custom prompts, redirects and settings all live only in this browser's local storage.</p>
+      <p><strong>Your data, your control.</strong> You can wipe everything stored by this app at any time using the <strong>⟲ Reset</strong> button in the header.</p>
+      <p><strong>Personal project.</strong> This is a personal, hobby project provided "as-is," with no guaranteed support or bug fixes.</p>
+      <p><strong>Support.</strong> If you find it useful, consider <a href="PLACEHOLDER" target="_blank" rel="noopener">making a donation</a> to help keep it going.</p>
+    </div>
+    <div class="row welcome-actions">
+      <button class="btn primary" id="welcome-close" type="button">Got it</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============ DATA ============ */
+  var AIS = [
+    { name: "ChatGPT",    desc: "General purpose",  url: "https://chat.openai.com/",      accent: "#10A37F" },
+    { name: "Claude",     desc: "Writing & code",   url: "https://claude.ai/new",         accent: "#D97757" },
+    { name: "Gemini",     desc: "Multimodal",       url: "https://gemini.google.com/app", accent: "#4E8CFF" },
+    { name: "Mistral",    desc: "Open-weight / EU", url: "https://chat.mistral.ai/chat",  accent: "#FF7000" },
+    { name: "Perplexity", desc: "Web research",     url: "https://www.perplexity.ai/",    accent: "#20B8CD" },
+    { name: "Grok",       desc: "Real-time data",   url: "https://grok.com/",             accent: "#9AA0A6" },
+    { name: "DeepSeek",   desc: "Reasoning & code", url: "https://chat.deepseek.com/",    accent: "#4D6BFE" },
+    { name: "DuckDuckGo", desc: "Privacy",          url: "https://duckduckgo.com/aichat", accent: "#DE5833" }
+  ];
+
+  var PROMPTS_CONTENT = [
+    { label: "[Sum]",       text: "Summarize the following text concisely, focusing on the main points:\n\n" },
+    { label: "[Explain]",   text: "Explain the following concept in simple terms, as if I were a beginner:\n\n" },
+    { label: "[Fix]",       text: "Please correct the grammar, flow, and clarity of the following text while keeping the original meaning intact:\n\n" },
+    { label: "[Translate]", text: "Translate the following text into natural sounding \"Language\":\n\n" },
+    { label: "[List]",      text: "Organize the following information into a clear bullet-point list with a brief introduction and conclusion:\n\n" },
+    { label: "[Ideas]",     text: "Give me 5 creative ideas or perspectives regarding the following topic:\n\n" },
+    { label: "[Review]",    text: "Review the following text and point out any logical fallacies or missing information:\n\n" }
+  ];
+
+  var PROMPTS_STYLE = [
+    { label: "[Lang]",      text: "From now on, please respond to all my messages exclusively in [language]." },
+    { label: "[Assume]",    text: "Mention any assumptions you are making in your answer." },
+    { label: "[Brief]",     text: "Keep your answer brief and avoid unnecessary filler words." },
+    { label: "[Table]",     text: "Present the pros and cons in a table format." },
+    { label: "[Steps]",     text: "Break this down into a step-by-step guide." },
+    { label: "[Ask]",       text: "Before answering, ask me any questions you need to clarify my request." }
+  ];
+
+  var PROMPTS_MOOD = [
+    { label: "[Formal]",   text: "Respond in a formal, professional tone." },
+    { label: "[Casual]",   text: "Respond in a casual, relaxed tone." },
+    { label: "[Sincere]",  text: "Respond in a sincere, honest, and direct tone." },
+    { label: "[Friendly]", text: "Respond in a warm, friendly tone." },
+    { label: "[Playful]",  text: "Respond in a playful, lighthearted tone." }
+  ];
+
+  /* ============ TIMER / STOPWATCH ============ */
+  function formatTime(s) {
+    var m = Math.floor(s / 60), sec = s % 60;
+    return (m < 10 ? "0" : "") + m + ":" + (sec < 10 ? "0" : "") + sec;
+  }
+
+  function beep() {
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      var ctx = new Ctx();
+      [0, 0.35, 0.7, 1.05].forEach(function (delay) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = "square";
+        osc.frequency.value = 1000;
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + delay + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + 0.45);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + 0.45);
+      });
+    } catch (e) { /* audio not available, fail silently */ }
+  }
+
+  var pomoPreset = 25 * 60;
+  var pomoSeconds = pomoPreset;
+  var pomoInterval = null;
+  var pomoRunning = false;
+  var pomoTimeEl = document.getElementById("pomo-time");
+  var pomoStartBtn = document.getElementById("pomo-start");
+  var pomoMinutesInput = document.getElementById("pomo-minutes");
+
+  function renderPomo() { pomoTimeEl.textContent = formatTime(pomoSeconds); }
+  renderPomo();
+
+  function pomoTick() {
+    if (pomoSeconds <= 0) {
+      clearInterval(pomoInterval);
+      pomoInterval = null;
+      pomoRunning = false;
+      pomoStartBtn.textContent = "Start";
+      pomoTimeEl.textContent = "Done";
+      beep();
+      return;
+    }
+    pomoSeconds--;
+    renderPomo();
+  }
+
+  pomoStartBtn.addEventListener("click", function () {
+    if (pomoRunning) {
+      clearInterval(pomoInterval);
+      pomoInterval = null;
+      pomoRunning = false;
+      pomoStartBtn.textContent = "Start";
+    } else {
+      if (pomoSeconds <= 0) pomoSeconds = pomoPreset;
+      pomoRunning = true;
+      pomoStartBtn.textContent = "Pause";
+      pomoInterval = setInterval(pomoTick, 1000);
+    }
+  });
+
+  document.getElementById("pomo-reset").addEventListener("click", function () {
+    clearInterval(pomoInterval);
+    pomoInterval = null;
+    pomoRunning = false;
+    pomoStartBtn.textContent = "Start";
+    pomoSeconds = pomoPreset;
+    renderPomo();
+  });
+
+  document.getElementById("pomo-set").addEventListener("click", function () {
+    var minutes = parseInt(pomoMinutesInput.value, 10);
+    if (!minutes || minutes < 1) minutes = 1;
+    if (minutes > 180) minutes = 180;
+    pomoMinutesInput.value = minutes;
+    clearInterval(pomoInterval);
+    pomoInterval = null;
+    pomoRunning = false;
+    pomoStartBtn.textContent = "Start";
+    pomoPreset = minutes * 60;
+    pomoSeconds = pomoPreset;
+    renderPomo();
+  });
+
+  var swSeconds = 0;
+  var swInterval = null;
+  var swRunning = false;
+  var swTimeEl = document.getElementById("sw-time");
+  var swStartBtn = document.getElementById("sw-start");
+
+  function renderSw() { swTimeEl.textContent = formatTime(swSeconds); }
+
+  swStartBtn.addEventListener("click", function () {
+    if (swRunning) {
+      clearInterval(swInterval);
+      swInterval = null;
+      swRunning = false;
+      swStartBtn.textContent = "Start";
+    } else {
+      swRunning = true;
+      swStartBtn.textContent = "Pause";
+      swInterval = setInterval(function () { swSeconds++; renderSw(); }, 1000);
+    }
+  });
+
+  document.getElementById("sw-reset").addEventListener("click", function () {
+    clearInterval(swInterval);
+    swInterval = null;
+    swRunning = false;
+    swStartBtn.textContent = "Start";
+    swSeconds = 0;
+    renderSw();
+  });
+
+  /* ============ THEME ============ */
+  var root = document.documentElement;
+  function applyTheme(t) {
+    root.setAttribute("data-theme", t);
+    localStorage.setItem("acd-theme", t);
+    var btn = document.getElementById("theme-toggle");
+    btn.textContent = t === "dark" ? "☾ Theme" : "☀ Theme";
+  }
+  var savedTheme = localStorage.getItem("acd-theme");
+  if (!savedTheme) {
+    savedTheme = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  }
+  applyTheme(savedTheme);
+  document.getElementById("theme-toggle").addEventListener("click", function () {
+    applyTheme(root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+
+  /* ============ FOCUS MODE ============ */
+  var focusBtn = document.getElementById("focus-toggle");
+  function applyFocus(on) {
+    document.body.classList.toggle("focus-mode", on);
+    focusBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    localStorage.setItem("acd-focus", on ? "1" : "0");
+  }
+  applyFocus(localStorage.getItem("acd-focus") === "1");
+  focusBtn.addEventListener("click", function () {
+    applyFocus(!document.body.classList.contains("focus-mode"));
+  });
+
+  /* ============ AI GRID ============ */
+  var grid = document.getElementById("ai-grid");
+  AIS.forEach(function (ai, i) {
+    var card = document.createElement("div");
+    card.className = "ai-card";
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-label", "Open " + ai.name + " (Alt+" + (i + 1) + ")");
+    card.style.setProperty("--accent", ai.accent);
+    card.innerHTML =
+      '<span class="keycap">Alt+' + (i + 1) + '</span>' +
+      '<span class="name">' + ai.name + '</span>' +
+      '<span class="desc">' + ai.desc + '</span>';
+    function open() { window.open(ai.url, "_blank", "noopener"); }
+    card.addEventListener("click", open);
+    card.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+    });
+    grid.appendChild(card);
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (!e.altKey) return;
+    var n = parseInt(e.key, 10);
+    if (n >= 1 && n <= 8) {
+      e.preventDefault();
+      window.open(AIS[n - 1].url, "_blank", "noopener");
+      return;
+    }
+    var key = e.key.toLowerCase();
+    if (key === "0") {
+      e.preventDefault();
+      applyFocus(!document.body.classList.contains("focus-mode"));
+    } else if (key === "t") {
+      e.preventDefault();
+      applyTheme(root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+    } else if (key === "n") {
+      e.preventDefault();
+      document.getElementById("notes").focus();
+    } else if (key === "c") {
+      e.preventDefault();
+      document.getElementById("cleaner").focus();
+    }
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "/") return;
+    var active = document.activeElement;
+    var typing = active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA");
+    if (typing) return;
+    e.preventDefault();
+    document.getElementById("draft").focus();
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "?") return;
+    var active = document.activeElement;
+    var typing = active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA");
+    if (typing) return;
+    e.preventDefault();
+    openShortcuts();
+  });
+
+  /* ============ DRAFT / PROMPT LIBRARY ============ */
+  var draft = document.getElementById("draft");
+  var draftMeta = document.getElementById("draft-meta");
+  draft.value = localStorage.getItem("acd-draft") || "";
+
+  function updateMeta() {
+    var text = draft.value;
+    var words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    draftMeta.textContent = words + " words · " + text.length + " characters";
+  }
+  updateMeta();
+
+  draft.addEventListener("input", function () {
+    localStorage.setItem("acd-draft", draft.value);
+    updateMeta();
+  });
+
+  /* ============ NOTES ============ */
+  var notes = document.getElementById("notes");
+  notes.value = localStorage.getItem("acd-notes") || "";
+  notes.addEventListener("input", function () {
+    localStorage.setItem("acd-notes", notes.value);
+  });
+
+  document.getElementById("notes-copy").addEventListener("click", function () {
+    var btn = this;
+    navigator.clipboard.writeText(notes.value).then(function () {
+      var old = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(function () { btn.textContent = old; }, 1200);
+    });
+  });
+
+  document.getElementById("notes-save").addEventListener("click", function () {
+    if (!notes.value.trim()) return;
+    var blob = new Blob([notes.value], { type: "text/plain" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = "notes-" + stamp + ".txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById("notes-clear").addEventListener("click", function () {
+    notes.value = "";
+    localStorage.removeItem("acd-notes");
+    notes.focus();
+  });
+
+  /* ============ CLEAN TEXT ============ */
+  function cleanText(text) {
+    // collapse repeated spaces/tabs
+    text = text.replace(/[ \t]+/g, " ");
+    // trim each line
+    text = text.split("\n").map(function (line) { return line.trim(); }).join("\n");
+    // collapse 3+ blank lines into a single blank line
+    text = text.replace(/\n{3,}/g, "\n\n");
+    // remove consecutive duplicate words (case-insensitive), keep first occurrence
+    text = text.replace(/\b(\w+)(\s+\1\b)+/gi, "$1");
+    return text.trim();
+  }
+
+  var cleaner = document.getElementById("cleaner");
+
+  // Auto-clean on paste and when leaving the field, so the button row can match Notes exactly.
+  cleaner.addEventListener("paste", function () {
+    setTimeout(function () { cleaner.value = cleanText(cleaner.value); }, 0);
+  });
+  cleaner.addEventListener("blur", function () {
+    if (cleaner.value) cleaner.value = cleanText(cleaner.value);
+  });
+
+  document.getElementById("cleaner-copy").addEventListener("click", function () {
+    cleaner.value = cleanText(cleaner.value);
+    var btn = this;
+    navigator.clipboard.writeText(cleaner.value).then(function () {
+      var old = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(function () { btn.textContent = old; }, 1200);
+    });
+  });
+
+  document.getElementById("cleaner-save").addEventListener("click", function () {
+    cleaner.value = cleanText(cleaner.value);
+    if (!cleaner.value.trim()) return;
+    var blob = new Blob([cleaner.value], { type: "text/plain" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = "clean-text-" + stamp + ".txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById("cleaner-clear").addEventListener("click", function () {
+    cleaner.value = "";
+    cleaner.focus();
+  });
+
+  function buildPromptDropdown(selectEl, getItems, placeholder) {
+    function rebuild() {
+      var items = getItems();
+      selectEl.innerHTML = "";
+      var ph = document.createElement("option");
+      ph.value = "";
+      ph.textContent = placeholder;
+      selectEl.appendChild(ph);
+      items.forEach(function (p, idx) {
+        var opt = document.createElement("option");
+        opt.value = idx;
+        opt.textContent = p.label;
+        selectEl.appendChild(opt);
+      });
+    }
+    rebuild();
+    selectEl.addEventListener("change", function () {
+      if (selectEl.value === "") return;
+      var items = getItems();
+      var p = items[parseInt(selectEl.value, 10)];
+      draft.value += (draft.value && !draft.value.endsWith("\n") ? "\n" : "") + p.text;
+      localStorage.setItem("acd-draft", draft.value);
+      updateMeta();
+      draft.focus();
+      selectEl.selectedIndex = 0;
+    });
+    return rebuild;
+  }
+  buildPromptDropdown(document.getElementById("dd-start"), function () { return PROMPTS_CONTENT; }, "Start of prompt \u25be");
+  buildPromptDropdown(document.getElementById("dd-end"), function () { return PROMPTS_STYLE; }, "End of prompt \u25be");
+  buildPromptDropdown(document.getElementById("dd-mood"), function () { return PROMPTS_MOOD; }, "Mood \u25be");
+
+  /* ============ CUSTOM PROMPTS (personal library) ============ */
+  var CUSTOM_PROMPTS = [];
+  try { CUSTOM_PROMPTS = JSON.parse(localStorage.getItem("acd-custom-prompts") || "[]"); } catch (e) { CUSTOM_PROMPTS = []; }
+
+  function saveCustomPrompts() {
+    localStorage.setItem("acd-custom-prompts", JSON.stringify(CUSTOM_PROMPTS));
+  }
+
+  var rebuildCustomDropdown = buildPromptDropdown(
+    document.getElementById("dd-custom"),
+    function () { return CUSTOM_PROMPTS; },
+    "My prompts \u25be"
+  );
+
+  function renderPromptManagerList() {
+    var list = document.getElementById("pm-list");
+    list.innerHTML = "";
+    if (!CUSTOM_PROMPTS.length) {
+      list.innerHTML = '<div class="pm-empty">No custom prompts yet.</div>';
+      return;
+    }
+    CUSTOM_PROMPTS.forEach(function (p, idx) {
+      var row = document.createElement("div");
+      row.className = "pm-item";
+      var label = document.createElement("span");
+      label.textContent = p.label;
+      var remove = document.createElement("span");
+      remove.className = "pm-item-remove";
+      remove.textContent = "remove";
+      remove.addEventListener("click", function () {
+        CUSTOM_PROMPTS.splice(idx, 1);
+        saveCustomPrompts();
+        renderPromptManagerList();
+        rebuildCustomDropdown();
+      });
+      row.appendChild(label);
+      row.appendChild(remove);
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById("pm-add").addEventListener("click", function () {
+    var labelInput = document.getElementById("pm-label");
+    var textInput = document.getElementById("pm-text");
+    var label = labelInput.value.trim();
+    var text = textInput.value.trim();
+    if (!label || !text) return;
+    if (!/^\[.*\]$/.test(label)) label = "[" + label + "]";
+    CUSTOM_PROMPTS.push({ label: label, text: text });
+    saveCustomPrompts();
+    labelInput.value = "";
+    textInput.value = "";
+    renderPromptManagerList();
+    rebuildCustomDropdown();
+  });
+
+  var promptManagerOverlay = document.getElementById("prompt-manager-overlay");
+  function openPromptManager() {
+    promptManagerOverlay.classList.add("open");
+    renderPromptManagerList();
+  }
+  function closePromptManager() {
+    promptManagerOverlay.classList.remove("open");
+  }
+  document.getElementById("prompt-manager-trigger").addEventListener("click", openPromptManager);
+  promptManagerOverlay.addEventListener("click", function (e) {
+    if (e.target === promptManagerOverlay) closePromptManager();
+  });
+
+  document.getElementById("copy-draft").addEventListener("click", function () {
+    var btn = this;
+    navigator.clipboard.writeText(draft.value).then(function () {
+      var old = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(function () { btn.textContent = old; }, 1200);
+    });
+  });
+
+  document.getElementById("save-draft").addEventListener("click", function () {
+    if (!draft.value.trim()) return;
+    var blob = new Blob([draft.value], { type: "text/plain" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = "draft-" + stamp + ".txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById("clear-draft").addEventListener("click", function () {
+    draft.value = "";
+    localStorage.removeItem("acd-draft");
+    updateMeta();
+    draft.focus();
+  });
+
+  /* ============ WIKIPEDIA SEARCH ============ */
+  var wikiInput = document.getElementById("wiki-input");
+  var wikiStatus = document.getElementById("wiki-status");
+
+  function doWikiSearch() {
+    var q = wikiInput.value.trim();
+    if (!q) return;
+    wikiStatus.textContent = "Searching...";
+    var api = "https://en.wikipedia.org/w/api.php?action=opensearch&search=" +
+      encodeURIComponent(q) + "&limit=1&namespace=0&format=json&origin=*";
+    fetch(api)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var titles = data[1], links = data[3];
+        if (links && links.length) {
+          wikiStatus.textContent = "Opening: " + titles[0];
+          window.open(links[0], "_blank", "noopener");
+        } else {
+          wikiStatus.textContent = "No results for \"" + q + "\".";
+        }
+      })
+      .catch(function () {
+        wikiStatus.textContent = "Search failed — opening Wikipedia search page instead.";
+        window.open("https://en.wikipedia.org/w/index.php?search=" + encodeURIComponent(q), "_blank", "noopener");
+      });
+  }
+
+  document.getElementById("wiki-btn").addEventListener("click", doWikiSearch);
+  wikiInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") doWikiSearch();
+  });
+
+  /* ============ REDIRECTS ============ */
+  var REDIRECTS = [
+    { label: "Excalidraw", url: "https://excalidraw.com/" },
+    { label: "Notion", url: "https://www.notion.so/" },
+    { label: "NotebookLM", url: "https://notebooklm.google.com/" },
+    { label: "Translator", url: "https://translate.google.com/" },
+    { label: "Dase Utils", url: "https://donodaseves.github.io/daseutils/" }
+  ];
+
+  var CUSTOM_REDIRECTS = [];
+  try { CUSTOM_REDIRECTS = JSON.parse(localStorage.getItem("acd-custom-redirects") || "[]"); } catch (e) { CUSTOM_REDIRECTS = []; }
+
+  function saveCustomRedirects() {
+    localStorage.setItem("acd-custom-redirects", JSON.stringify(CUSTOM_REDIRECTS));
+  }
+
+  function normalizeUrl(u) {
+    if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+    return u;
+  }
+
+  var redirectLinks = document.getElementById("redirect-links");
+
+  function addRedirectChip(r, removable, idx) {
+    var link = document.createElement("a");
+    link.className = "chip";
+    link.href = r.url;
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.textContent = r.label;
+    if (removable) {
+      var remove = document.createElement("span");
+      remove.className = "chip-remove";
+      remove.textContent = "\u2715";
+      remove.title = "Remove";
+      remove.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        CUSTOM_REDIRECTS.splice(idx, 1);
+        saveCustomRedirects();
+        renderRedirects();
+      });
+      link.appendChild(remove);
+    }
+    redirectLinks.appendChild(link);
+  }
+
+  function renderRedirects() {
+    redirectLinks.innerHTML = "";
+    REDIRECTS.forEach(function (r) { addRedirectChip(r, false); });
+    CUSTOM_REDIRECTS.forEach(function (r, idx) { addRedirectChip(r, true, idx); });
+  }
+  renderRedirects();
+
+  function renderRedirectManagerList() {
+    var list = document.getElementById("rm-list");
+    list.innerHTML = "";
+    if (!CUSTOM_REDIRECTS.length) {
+      list.innerHTML = '<div class="pm-empty">No custom redirects yet.</div>';
+      return;
+    }
+    CUSTOM_REDIRECTS.forEach(function (r, idx) {
+      var row = document.createElement("div");
+      row.className = "pm-item";
+      var label = document.createElement("span");
+      label.textContent = r.label;
+      var remove = document.createElement("span");
+      remove.className = "pm-item-remove";
+      remove.textContent = "remove";
+      remove.addEventListener("click", function () {
+        CUSTOM_REDIRECTS.splice(idx, 1);
+        saveCustomRedirects();
+        renderRedirects();
+        renderRedirectManagerList();
+      });
+      row.appendChild(label);
+      row.appendChild(remove);
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById("redirect-add-btn").addEventListener("click", function () {
+    var labelInput = document.getElementById("redirect-label-input");
+    var urlInput = document.getElementById("redirect-url-input");
+    var label = labelInput.value.trim();
+    var url = urlInput.value.trim();
+    if (!label || !url) return;
+    CUSTOM_REDIRECTS.push({ label: label, url: normalizeUrl(url) });
+    saveCustomRedirects();
+    labelInput.value = "";
+    urlInput.value = "";
+    renderRedirects();
+    renderRedirectManagerList();
+  });
+
+  var redirectManagerOverlay = document.getElementById("redirect-manager-overlay");
+  function openRedirectManager() {
+    redirectManagerOverlay.classList.add("open");
+    renderRedirectManagerList();
+  }
+  function closeRedirectManager() {
+    redirectManagerOverlay.classList.remove("open");
+  }
+  document.getElementById("redirect-manager-trigger").addEventListener("click", openRedirectManager);
+  redirectManagerOverlay.addEventListener("click", function (e) {
+    if (e.target === redirectManagerOverlay) closeRedirectManager();
+  });
+
+  /* ============ COMMAND PALETTE ============ */
+  function buildCmdkItems() {
+    return AIS.map(function (ai, i) {
+      return { label: ai.name, tag: "Alt+" + (i + 1), url: ai.url };
+    }).concat(REDIRECTS.concat(CUSTOM_REDIRECTS).map(function (r) {
+      return { label: r.label, tag: "Redirect", url: r.url };
+    }));
+  }
+
+  var cmdkOverlay = document.getElementById("cmdk-overlay");
+  var cmdkInput = document.getElementById("cmdk-input");
+  var cmdkList = document.getElementById("cmdk-list");
+  var CMDK_ITEMS = buildCmdkItems();
+  var cmdkFiltered = CMDK_ITEMS.slice();
+  var cmdkActive = 0;
+
+  function renderCmdkList() {
+    cmdkList.innerHTML = "";
+    if (!cmdkFiltered.length) {
+      cmdkList.innerHTML = '<div class="cmdk-empty">No matches</div>';
+      return;
+    }
+    cmdkFiltered.forEach(function (item, idx) {
+      var el = document.createElement("div");
+      el.className = "cmdk-item" + (idx === cmdkActive ? " active" : "");
+      el.innerHTML = "<span>" + item.label + "</span><span class=\"cmdk-tag\">" + item.tag + "</span>";
+      el.addEventListener("click", function () { openCmdkItem(item); });
+      cmdkList.appendChild(el);
+    });
+  }
+
+  function openCmdkItem(item) {
+    window.open(item.url, "_blank", "noopener");
+    closeCmdk();
+  }
+
+  function openCmdk() {
+    CMDK_ITEMS = buildCmdkItems();
+    cmdkOverlay.classList.add("open");
+    cmdkInput.value = "";
+    cmdkFiltered = CMDK_ITEMS.slice();
+    cmdkActive = 0;
+    renderCmdkList();
+    setTimeout(function () { cmdkInput.focus(); }, 0);
+  }
+
+  function closeCmdk() {
+    cmdkOverlay.classList.remove("open");
+  }
+
+  cmdkInput.addEventListener("input", function () {
+    var q = cmdkInput.value.toLowerCase();
+    cmdkFiltered = CMDK_ITEMS.filter(function (i) { return i.label.toLowerCase().indexOf(q) > -1; });
+    cmdkActive = 0;
+    renderCmdkList();
+  });
+
+  cmdkInput.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (cmdkFiltered.length) cmdkActive = (cmdkActive + 1) % cmdkFiltered.length;
+      renderCmdkList();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (cmdkFiltered.length) cmdkActive = (cmdkActive - 1 + cmdkFiltered.length) % cmdkFiltered.length;
+      renderCmdkList();
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (cmdkFiltered[cmdkActive]) openCmdkItem(cmdkFiltered[cmdkActive]);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      closeCmdk();
+    }
+  });
+
+  cmdkOverlay.addEventListener("click", function (e) {
+    if (e.target === cmdkOverlay) closeCmdk();
+  });
+
+  document.getElementById("cmdk-trigger").addEventListener("click", openCmdk);
+
+  document.addEventListener("keydown", function (e) {
+    var key = e.key.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && key === "k") {
+      e.preventDefault();
+      if (cmdkOverlay.classList.contains("open")) closeCmdk(); else openCmdk();
+    }
+  });
+
+  /* ============ SHORTCUTS ============ */
+  var SHORTCUTS = [
+    { key: "Alt+1–8", desc: "Open AI models" },
+    { key: "Ctrl/⌘+K", desc: "Command palette" },
+    { key: "/", desc: "Jump to draft" },
+    { key: "Alt+0", desc: "Toggle Focus Mode" },
+    { key: "Alt+T", desc: "Toggle theme" },
+    { key: "Alt+N", desc: "Jump to notes" },
+    { key: "Alt+C", desc: "Jump to Clean Text" },
+    { key: "Shift+/", desc: "Open this shortcuts list" }
+  ];
+
+  var shortcutsBody = document.getElementById("shortcuts-body");
+  SHORTCUTS.forEach(function (s) {
+    var row = document.createElement("div");
+    row.className = "shortcut-row";
+    row.innerHTML = "<span>" + s.desc + "</span><span class=\"shortcut-key\">" + s.key + "</span>";
+    shortcutsBody.appendChild(row);
+  });
+
+  var shortcutsOverlay = document.getElementById("shortcuts-overlay");
+  function openShortcuts() { shortcutsOverlay.classList.add("open"); }
+  function closeShortcuts() { shortcutsOverlay.classList.remove("open"); }
+
+  document.getElementById("shortcuts-trigger").addEventListener("click", openShortcuts);
+  shortcutsOverlay.addEventListener("click", function (e) {
+    if (e.target === shortcutsOverlay) closeShortcuts();
+  });
+
+  document.getElementById("reset-storage").addEventListener("click", function () {
+    var ok = confirm("This clears all saved data (draft, notes, theme, focus mode, custom prompts and redirects) and reloads the page. Continue?");
+    if (!ok) return;
+    localStorage.clear();
+    location.reload();
+  });
+
+  /* ============ MORE MENU ============ */
+  var moreTrigger = document.getElementById("more-trigger");
+  var moreDropdown = document.getElementById("more-dropdown");
+  function toggleMore(e) {
+    e.stopPropagation();
+    var isOpen = moreDropdown.classList.toggle("open");
+    moreTrigger.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  }
+  function closeMore() {
+    moreDropdown.classList.remove("open");
+    moreTrigger.setAttribute("aria-expanded", "false");
+  }
+  moreTrigger.addEventListener("click", toggleMore);
+  document.addEventListener("click", function (e) {
+    if (moreDropdown.classList.contains("open") && !moreDropdown.contains(e.target) && e.target !== moreTrigger) {
+      closeMore();
+    }
+  });
+  Array.prototype.forEach.call(moreDropdown.querySelectorAll(".more-item"), function (item) {
+    item.addEventListener("click", closeMore);
+  });
+
+  /* ============ WELCOME / ONBOARDING ============ */
+  var welcomeOverlay = document.getElementById("welcome-overlay");
+  function openWelcome() { welcomeOverlay.classList.add("open"); }
+  function closeWelcome() {
+    welcomeOverlay.classList.remove("open");
+    localStorage.setItem("acd-welcomed", "1");
+  }
+  document.getElementById("welcome-close").addEventListener("click", closeWelcome);
+  welcomeOverlay.addEventListener("click", function (e) {
+    if (e.target === welcomeOverlay) closeWelcome();
+  });
+  if (!localStorage.getItem("acd-welcomed")) {
+    openWelcome();
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if (shortcutsOverlay.classList.contains("open")) closeShortcuts();
+    if (promptManagerOverlay.classList.contains("open")) closePromptManager();
+    if (redirectManagerOverlay.classList.contains("open")) closeRedirectManager();
+    if (welcomeOverlay.classList.contains("open")) closeWelcome();
+    if (moreDropdown.classList.contains("open")) closeMore();
+  });
+
+})();
+</script>
+</body>
+</html>
