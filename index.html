@@ -495,6 +495,14 @@
     font-weight: 600;
     letter-spacing: 0.02em;
   }
+  .pomodoro-time.ringing {
+    color: var(--danger);
+    animation: acd-pulse 0.9s ease-in-out infinite;
+  }
+  @keyframes acd-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
   .timer-set-row {
     display: flex;
     gap: 6px;
@@ -590,7 +598,7 @@
   .shortcuts-modal-body { padding: 4px 16px 8px; }
 
   @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; }
+    * { transition: none !important; animation: none !important; }
   }
 
   .error-banner {
@@ -932,6 +940,8 @@ window.addEventListener("error", function () { acdShowErrorBanner(); });
   var pomoSeconds = pomoPreset;
   var pomoInterval = null;
   var pomoRunning = false;
+  var pomoRinging = false;
+  var pomoBeepTimer = null;
   var pomoTimeEl = document.getElementById("pomo-time");
   var pomoStartBtn = document.getElementById("pomo-start");
   var pomoMinutesInput = document.getElementById("pomo-minutes");
@@ -939,14 +949,30 @@ window.addEventListener("error", function () { acdShowErrorBanner(); });
   function renderPomo() { pomoTimeEl.textContent = formatTime(pomoSeconds); }
   renderPomo();
 
+  function startBeepLoop() {
+    pomoRinging = true;
+    pomoTimeEl.classList.add("ringing");
+    beep();
+    pomoBeepTimer = setTimeout(startBeepLoop, 1800);
+  }
+
+  function stopBeepLoop() {
+    pomoRinging = false;
+    pomoTimeEl.classList.remove("ringing");
+    if (pomoBeepTimer) {
+      clearTimeout(pomoBeepTimer);
+      pomoBeepTimer = null;
+    }
+  }
+
   function pomoTick() {
     if (pomoSeconds <= 0) {
       clearInterval(pomoInterval);
       pomoInterval = null;
       pomoRunning = false;
-      pomoStartBtn.textContent = "Start";
       pomoTimeEl.textContent = "Done";
-      beep();
+      pomoStartBtn.textContent = "Stop alarm";
+      startBeepLoop();
       return;
     }
     pomoSeconds--;
@@ -954,6 +980,11 @@ window.addEventListener("error", function () { acdShowErrorBanner(); });
   }
 
   pomoStartBtn.addEventListener("click", function () {
+    if (pomoRinging) {
+      stopBeepLoop();
+      pomoStartBtn.textContent = "Start";
+      return;
+    }
     if (pomoRunning) {
       clearInterval(pomoInterval);
       pomoInterval = null;
@@ -968,6 +999,7 @@ window.addEventListener("error", function () { acdShowErrorBanner(); });
   });
 
   document.getElementById("pomo-reset").addEventListener("click", function () {
+    stopBeepLoop();
     clearInterval(pomoInterval);
     pomoInterval = null;
     pomoRunning = false;
@@ -977,6 +1009,7 @@ window.addEventListener("error", function () { acdShowErrorBanner(); });
   });
 
   document.getElementById("pomo-set").addEventListener("click", function () {
+    stopBeepLoop();
     var minutes = parseInt(pomoMinutesInput.value, 10);
     if (!minutes || minutes < 1) minutes = 1;
     if (minutes > 180) minutes = 180;
